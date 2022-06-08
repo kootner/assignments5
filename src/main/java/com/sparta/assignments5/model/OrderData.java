@@ -20,7 +20,7 @@ public class OrderData {
         @Column(nullable = false)
         private String restaurantName;
 
-        @OneToMany
+        @OneToMany (cascade = CascadeType.ALL)
         @JoinColumn(name = "ORDERFOODS_ID", nullable = false)
         private List<OrderFoods> foods;
 

@@ -12,6 +12,6 @@ import lombok.Setter;
 @Setter
 public class OrderRequestFoodsDto {
 
-    private int id;
+    private Long id;
     private int quantity;
 }

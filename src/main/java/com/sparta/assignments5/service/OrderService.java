@@ -31,26 +31,30 @@ public class OrderService {
         List<OrderFoods> orderFoodsList = new ArrayList<>();
         List<OrderRequestFoodsDto> foods = orderRequestDto.getFoods();
         Restaurant restaurant = restaurantRepository.getReferenceById(orderRequestDto.getRestaurantId());
-        List<Food> foodList = foodRepository.findAllByRestaurantId(orderRequestDto.getRestaurantId());
 
         orderData.setRestaurantName(restaurant.getName());
         orderData.setDeliveryFee(restaurant.getDeliveryFee());
 
-        for (int i = 0; i < orderRequestDto.getFoods().size(); i++) {
-            if (foods.get(i).getQuantity() <= 0 || foods.get(i).getQuantity() > 100)
+        for (OrderRequestFoodsDto orderRequestFoodsDto : foods) {
+            if (orderRequestFoodsDto.getQuantity() <= 0 || orderRequestFoodsDto.getQuantity() > 100)
                 throw new IllegalArgumentException("허용값이 아닙니다.");
 
+            Long id = orderRequestFoodsDto.getId();
+            Food food = foodRepository.findById(id).orElseThrow(() ->
+                    new IllegalArgumentException("음식 ID 값이 없습니다."));
+
             OrderFoods orderFoods = new OrderFoods();
-            orderFoods.setId((long) i + 1);
-            orderFoods.setName(foodList.get(i).getName());
-            orderFoods.setQuantity(foods.get(i).getQuantity());
-            orderFoods.setPrice(foodList.get(i).getPrice() * foods.get(i).getQuantity());
+            orderFoods.setName(food.getName());
+            orderFoods.setQuantity(orderRequestFoodsDto.getQuantity());
+            orderFoods.setPrice(food.getPrice() * orderRequestFoodsDto.getQuantity());
 
             orderFoodsList.add(orderFoods);
             totalPrice += orderFoods.getPrice();
         }
         orderData.setFoods(orderFoodsList);
 
+        if (restaurant.getMinOrderPrice() > totalPrice)
+            throw new IllegalArgumentException("주문 금액이 최소 주문 금액 보다 낮습니다.");
         orderData.setTotalPrice(totalPrice + orderData.getDeliveryFee());
         orderRepository.save(orderData);
 
